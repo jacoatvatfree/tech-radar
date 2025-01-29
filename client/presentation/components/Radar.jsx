@@ -1,5 +1,5 @@
-import { h } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { h } from "preact";
+import { useEffect, useRef } from "preact/hooks";
 
 const Radar = ({ data }) => {
   const canvasRef = useRef(null);
@@ -10,7 +10,7 @@ const Radar = ({ data }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const width = canvas.width;
@@ -21,50 +21,186 @@ const Radar = ({ data }) => {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Draw rings
-    const ringCount = 4;
+    // Draw rings and their labels
+    const ringCount = 5;
+    const ringNames = ["Hold", "Open", "Assess", "Decide", "Adopt"]; // From outside inward
+
     for (let i = 1; i <= ringCount; i++) {
       const ringRadius = (radius / ringCount) * i;
       ctx.beginPath();
       ctx.arc(centerX, centerY, ringRadius, 0, 2 * Math.PI);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
       ctx.stroke();
+
+      // Add ring name at the North position
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      const labelY = centerY - ringRadius + 5; // +5 for slight offset from the line
+      ctx.fillText(ringNames[ringCount - i], centerX, labelY);
     }
 
-    // Draw quadrants
+    // Define quadrant colors and draw filled quadrants - in clockwise order starting from top-right
+    const quadrantColors = {
+      Save: "rgba(255, 255, 200, 0.2)", // Light yellow - top left
+      Scale: "rgba(255, 200, 200, 0.2)", // Light red - top right
+      Secure: "rgba(200, 255, 200, 0.2)", // Light green - bottom right
+      Maintain: "rgba(200, 200, 255, 0.2)", // Light blue - bottom left
+    };
+
+    // Draw and fill quadrants with rings of different opacity
+    Object.entries(quadrantColors).forEach(([quadrant, color], index) => {
+      const startAngle = (index * Math.PI) / 2;
+      const endAngle = ((index + 1) * Math.PI) / 2;
+
+      // Draw each ring separately for the quadrant
+      for (let ringIndex = ringCount; ringIndex >= 1; ringIndex--) {
+        const ringOuterRadius = (radius / ringCount) * ringIndex;
+        const ringInnerRadius = (radius / ringCount) * (ringIndex - 1);
+
+        // Calculate opacity: innermost ring (1) is most opaque (0.4), outermost (4) is most transparent (0.1)
+        const baseOpacity = 0.4 - (ringIndex - 1) * 0.1;
+
+        // Extract RGB values from the color string
+        const rgbMatch = color.match(/\d+/g);
+        if (!rgbMatch) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+
+        // Draw the ring segment
+        ctx.arc(centerX, centerY, ringOuterRadius, startAngle, endAngle);
+        ctx.lineTo(centerX, centerY);
+        ctx.arc(centerX, centerY, ringInnerRadius, endAngle, startAngle, true);
+
+        // Apply the color with calculated opacity
+        ctx.fillStyle = `rgba(${rgbMatch[0]}, ${rgbMatch[1]}, ${rgbMatch[2]}, ${baseOpacity})`;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.stroke();
+      }
+
+      // Add quadrant labels in corners
+      const padding = 20; // Padding from canvas edges
+
+      ctx.fillStyle = "black";
+      ctx.font = "bold 16px sans-serif";
+
+      let labelX, labelY;
+
+      if (index === 0) {
+        // Save (top left)
+        labelX = padding;
+        labelY = padding;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+      } else if (index === 1) {
+        // Scale (top right)
+        labelX = width - padding;
+        labelY = padding;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+      } else if (index === 2) {
+        // Secure (bottom right)
+        labelX = width - padding;
+        labelY = height - padding;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+      } else {
+        // Maintain (bottom left)
+        labelX = padding;
+        labelY = height - padding;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+      }
+
+      ctx.fillText(quadrant, labelX, labelY);
+    });
+
+    // Draw quadrant lines
     ctx.beginPath();
     ctx.moveTo(centerX, 0);
     ctx.lineTo(centerX, height);
     ctx.moveTo(0, centerY);
     ctx.lineTo(width, centerY);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
     ctx.stroke();
+
+    // Group data points by quadrant and ring
+    const groupedData = data.reduce((acc, item) => {
+      const quadrantKey = item.Quadrant;
+      const ringKey = item.Status;
+      acc[quadrantKey] = acc[quadrantKey] || {};
+      acc[quadrantKey][ringKey] = acc[quadrantKey][ringKey] || [];
+      acc[quadrantKey][ringKey].push(item);
+      return acc;
+    }, {});
 
     // Draw data points
     data.forEach((item) => {
       const { Quadrant, Status } = item;
-      const angle = (
-        (Quadrant === 'Techniques' ? 0 :
-          Quadrant === 'Tools' ? 1 :
-            Quadrant === 'Platforms' ? 2 :
-              3) *
-        Math.PI / 2
-      ) + Math.PI / 4;
+
+      // Calculate base angle for the quadrant - case insensitive matching
+      const quadrantLower = Quadrant.toLowerCase();
+      // Calculate base angle for the quadrant
+      // save = top-left (π), scale = top-right (0), secure = bottom-right (π/2), maintain = bottom-left (3π/2)
+      const baseAngle =
+        ((quadrantLower === "save"
+          ? 2
+          : quadrantLower === "scale"
+            ? 3
+            : quadrantLower === "secure"
+              ? 0
+              : quadrantLower === "maintain"
+                ? 1
+                : 0) *
+          Math.PI) /
+        2;
+
+      // Add random angle within the quadrant (±36 degrees instead of ±45)
+      // This creates a 10% buffer on each side of the quadrant lines
+      const randomAngleOffset = ((Math.random() - 0.5) * Math.PI * 0.8) / 2;
+      const angle = baseAngle + Math.PI / 4 + randomAngleOffset;
+
+      // Determine ring index based on status - case insensitive matching
+      const statusLower = Status.toLowerCase();
       const ringIndex =
-        Status === 'Hold' ? 1 :
-          Status === 'Assess' ? 2 :
-            Status === 'Trial' ? 3 :
-              4;
-      const pointRadius = (radius / ringCount) * ringIndex - (radius / ringCount) / 2;
+        statusLower === "hold"
+          ? 1
+          : statusLower === "open"
+            ? 2
+            : statusLower === "assess"
+              ? 3
+              : statusLower === "decide"
+                ? 4
+                : statusLower === "adopt"
+                  ? 5
+                  : 1; // Default to Hold if status doesn't match
+
+      // Calculate ring boundaries with 10% buffer on each side
+      const ringWidth = radius / ringCount;
+      const rawInnerRadius = ringWidth * (ringIndex - 1);
+      const rawOuterRadius = ringWidth * ringIndex;
+
+      // Add 10% buffer to both inner and outer radius
+      const bufferSize = ringWidth * 0.1;
+      const innerRadius = rawInnerRadius + bufferSize;
+      const outerRadius = rawOuterRadius - bufferSize;
+
+      // Random radius within the adjusted ring bounds (inner 80% of the ring)
+      const pointRadius =
+        innerRadius + Math.random() * (outerRadius - innerRadius);
+
       const x = centerX + pointRadius * Math.cos(angle);
       const y = centerY + pointRadius * Math.sin(angle);
 
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = 'blue';
+      ctx.fillStyle = "blue";
       ctx.fill();
-      ctx.fillStyle = 'black';
-      ctx.font = '12px sans-serif';
+      ctx.fillStyle = "black";
+      ctx.font = "12px sans-serif";
       ctx.fillText(item.Name, x + 10, y + 5);
     });
   }, [data]);

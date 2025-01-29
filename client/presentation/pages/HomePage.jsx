@@ -1,19 +1,18 @@
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import { parseCSV } from '@/infrastructure/csvParser';
-import Radar from '@/presentation/components/Radar';
-import useRadarStore from '@/domain/radarStore';
-import { ErrorBoundary } from 'react-error-boundary';
+import { h } from "preact";
+import { useState } from "preact/hooks";
+import { parseCSV } from "@/infrastructure/csvParser";
+import Radar from "@/presentation/components/Radar";
+import useRadarStore from "@/domain/radarStore";
+import { ErrorBoundary } from "react-error-boundary";
 
 const ErrorFallback = ({ error }) => {
   return (
     <div role="alert">
       <p>Something went wrong:</p>
-      <pre style={{ color: 'red' }}>{error.message}</pre>
+      <pre style={{ color: "red" }}>{error.message}</pre>
     </div>
   );
 };
-
 
 const HomePage = () => {
   const [fileError, setFileError] = useState(null);
@@ -24,8 +23,8 @@ const HomePage = () => {
     setFileError(null);
 
     const file = e.dataTransfer.files[0];
-    if (!file || !file.name.endsWith('.csv')) {
-      setFileError('Please upload a valid CSV file.');
+    if (!file || !file.name.endsWith(".csv")) {
+      setFileError("Please upload a valid CSV file.");
       return;
     }
 
@@ -33,7 +32,7 @@ const HomePage = () => {
       const parsedData = await parseCSV(file);
       setRadarData(parsedData);
     } catch (error) {
-      setFileError('Error parsing CSV file.');
+      setFileError("Error parsing CSV file.");
     }
   };
 
@@ -44,7 +43,7 @@ const HomePage = () => {
   return (
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div
-        class="border-2 border-dashed border-gray-400 p-6 rounded-md text-center cursor-pointer"
+        class="border-2 border-dashed border-gray-400 p-6 rounded-md text-center cursor-pointer print:hidden"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
