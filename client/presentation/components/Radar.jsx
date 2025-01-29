@@ -242,53 +242,112 @@ const Radar = ({ data }) => {
     setHoveredItem(null);
   };
 
-  return (
-    <div class="relative">
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={600}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      />
-      {hoveredItem && (
-        <div
-          class="absolute bg-white p-6 rounded-xl shadow-xl border border-gray-200"
-          style={{
-            left: mousePos.x < 400 ? "420px" : "20px",
-            top: "20px",
-            width: "360px",
-            maxHeight: "560px",
-            overflow: "auto",
-          }}
-        >
-          <h3 class="font-bold text-xl mb-4 pb-2 border-b-2 border-gray-100">
-            {hoveredItem.Name}
-          </h3>
+  // Sort items by quadrant and ring priority
+  const getItemPriority = (status) => {
+    const priorities = {
+      adopt: 1,
+      decide: 2,
+      assess: 3,
+      open: 4,
+      hold: 5,
+    };
+    return priorities[status.toLowerCase()] || 999;
+  };
 
-          <div class="bg-gray-50 rounded-lg p-4 mb-4">
-            <div class="grid grid-cols-[120px_1fr] gap-3 text-sm">
-              <div class="text-gray-600 font-medium">Status:</div>
-              <div class="font-semibold">{hoveredItem.Status}</div>
-              <div class="text-gray-600 font-medium">Quadrant:</div>
-              <div class="font-semibold">{hoveredItem.Quadrant}</div>
-              <div class="text-gray-600 font-medium">Owner:</div>
-              <div class="font-semibold">{hoveredItem.People}</div>
-              <div class="text-gray-600 font-medium">Date:</div>
-              <div class="font-semibold">
-                {new Date(hoveredItem.Date).toLocaleDateString()}
+  const itemsByQuadrant = data.reduce((acc, item) => {
+    const quadrant = item.Quadrant;
+    if (!acc[quadrant]) acc[quadrant] = [];
+    acc[quadrant].push(item);
+    return acc;
+  }, {});
+
+  // Sort items within each quadrant by status priority
+  Object.keys(itemsByQuadrant).forEach((quadrant) => {
+    itemsByQuadrant[quadrant].sort(
+      (a, b) => getItemPriority(a.Status) - getItemPriority(b.Status),
+    );
+  });
+
+  return (
+    <div class="flex flex-col items-center">
+      <div class="relative w-[800px]">
+        <canvas
+          ref={canvasRef}
+          width={800}
+          height={600}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        />
+        {hoveredItem && (
+          <div
+            class="absolute bg-white p-6 rounded-xl shadow-xl border border-gray-200"
+            style={{
+              left: mousePos.x < 400 ? "420px" : "20px",
+              top: "20px",
+              width: "360px",
+              maxHeight: "560px",
+              overflow: "auto",
+            }}
+          >
+            <h3 class="font-bold text-xl mb-4 pb-2 border-b-2 border-gray-100">
+              {hoveredItem.Name}
+            </h3>
+
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <div class="grid grid-cols-[120px_1fr] gap-3 text-sm">
+                <div class="text-gray-600 font-medium">Status:</div>
+                <div class="font-semibold">{hoveredItem.Status}</div>
+                <div class="text-gray-600 font-medium">Quadrant:</div>
+                <div class="font-semibold">{hoveredItem.Quadrant}</div>
+                <div class="text-gray-600 font-medium">Owner:</div>
+                <div class="font-semibold">{hoveredItem.People}</div>
+                <div class="text-gray-600 font-medium">Date:</div>
+                <div class="font-semibold">
+                  {new Date(hoveredItem.Date).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 rounded-lg p-4">
+              <div class="text-blue-800 font-medium mb-2">Description</div>
+              <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {hoveredItem.Description}
               </div>
             </div>
           </div>
+        )}
+      </div>
 
-          <div class="bg-blue-50 rounded-lg p-4">
-            <div class="text-blue-800 font-medium mb-2">Description</div>
-            <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {hoveredItem.Description}
+      {/* Grid view of items by quadrant */}
+      <div class="hidden print:block mt-12">
+        <div class="grid grid-cols-4 gap-6 w-[800px]">
+          {["Save", "Scale", "Secure", "Maintain"].map((quadrant) => (
+            <div key={quadrant} class="break-inside-avoid">
+              <h3 class="font-bold text-xl mb-4 pb-2 border-b-2 border-gray-200">
+                {quadrant}
+              </h3>
+              <div class="space-y-4">
+                {(itemsByQuadrant[quadrant] || []).map((item, index) => (
+                  <div
+                    key={index}
+                    class="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                      <div class="font-medium">{item.Name}</div>
+                      <div class="text-sm px-2 py-1 rounded bg-gray-200 text-gray-700">
+                        {item.Status}
+                      </div>
+                    </div>
+                    <div class="text-sm text-gray-600 whitespace-pre-wrap">
+                      {item.Description}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
