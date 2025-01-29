@@ -1,8 +1,11 @@
 import { h } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 const Radar = ({ data }) => {
   const canvasRef = useRef(null);
+  const dotsRef = useRef([]); // Store dot positions and data
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!data || data.length === 0) return;
@@ -138,6 +141,9 @@ const Radar = ({ data }) => {
     }, {});
 
     // Draw data points
+    // Clear previous dots
+    dotsRef.current = [];
+
     data.forEach((item) => {
       const { Quadrant, Status } = item;
 
@@ -195,6 +201,14 @@ const Radar = ({ data }) => {
       const x = centerX + pointRadius * Math.cos(angle);
       const y = centerY + pointRadius * Math.sin(angle);
 
+      // Store dot info for hover detection
+      dotsRef.current.push({
+        x,
+        y,
+        radius: 5,
+        item,
+      });
+
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fillStyle = "blue";
@@ -205,7 +219,78 @@ const Radar = ({ data }) => {
     });
   }, [data]);
 
-  return <canvas ref={canvasRef} width={800} height={600} />;
+  const handleMouseMove = (event) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    setMousePos({ x, y });
+
+    // Check if mouse is over any dot
+    const hoveredDot = dotsRef.current.find((dot) => {
+      const dx = x - dot.x;
+      const dy = y - dot.y;
+      return Math.sqrt(dx * dx + dy * dy) <= dot.radius;
+    });
+
+    setHoveredItem(hoveredDot?.item || null);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
+
+  return (
+    <div class="relative">
+      <canvas
+        ref={canvasRef}
+        width={800}
+        height={600}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      />
+      {hoveredItem && (
+        <div
+          class="absolute bg-white p-6 rounded-xl shadow-xl border border-gray-200"
+          style={{
+            left: mousePos.x < 400 ? "420px" : "20px",
+            top: "20px",
+            width: "360px",
+            maxHeight: "560px",
+            overflow: "auto",
+          }}
+        >
+          <h3 class="font-bold text-xl mb-4 pb-2 border-b-2 border-gray-100">
+            {hoveredItem.Name}
+          </h3>
+
+          <div class="bg-gray-50 rounded-lg p-4 mb-4">
+            <div class="grid grid-cols-[120px_1fr] gap-3 text-sm">
+              <div class="text-gray-600 font-medium">Status:</div>
+              <div class="font-semibold">{hoveredItem.Status}</div>
+              <div class="text-gray-600 font-medium">Quadrant:</div>
+              <div class="font-semibold">{hoveredItem.Quadrant}</div>
+              <div class="text-gray-600 font-medium">Owner:</div>
+              <div class="font-semibold">{hoveredItem.People}</div>
+              <div class="text-gray-600 font-medium">Date:</div>
+              <div class="font-semibold">
+                {new Date(hoveredItem.Date).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="text-blue-800 font-medium mb-2">Description</div>
+            <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {hoveredItem.Description}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Radar;

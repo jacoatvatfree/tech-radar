@@ -30,6 +30,7 @@ const HomePage = () => {
 
     try {
       const parsedData = await parseCSV(file);
+      console.log("Parsed CSV data:", parsedData);
       setRadarData(parsedData);
     } catch (error) {
       setFileError("Error parsing CSV file.");
