@@ -38,7 +38,7 @@ const RadarVisualization = ({
       ctx.font = "14px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
-      const labelY = centerY - ringRadius + 5;
+      const labelY = centerY - ringRadius + 25; // increased from +5 to +25 (approximately 1.5em)
       ctx.fillText(ringNames[ringCount - i], centerX, labelY);
     }
 
@@ -130,17 +130,17 @@ const RadarVisualization = ({
 
       const statusLower = Status.toLowerCase();
       const ringIndex =
-        statusLower === "hold"
+        statusLower === "adopt"
           ? 1
-          : statusLower === "open"
+          : statusLower === "decide"
             ? 2
             : statusLower === "assess"
               ? 3
-              : statusLower === "decide"
+              : statusLower === "open"
                 ? 4
-                : statusLower === "adopt"
+                : statusLower === "hold"
                   ? 5
-                  : 1;
+                  : 5; // Default to Hold (outermost ring)
 
       const ringWidth = radius / ringCount;
       const rawInnerRadius = ringWidth * (ringIndex - 1);
