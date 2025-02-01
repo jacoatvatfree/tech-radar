@@ -63,6 +63,7 @@ const Radar = ({ data }) => {
     <div class="flex flex-col items-center">
       <div class="relative w-[800px]">
         <canvas
+          class="bg-white dark:bg-background"
           ref={canvasRef}
           width={800}
           height={600}

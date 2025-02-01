@@ -37,7 +37,7 @@ const PrintGrid = ({ data }) => {
               {(itemsByQuadrant[quadrant] || []).map((item, index) => (
                 <div
                   key={index}
-                  class="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <div class="flex items-start justify-between gap-2 mb-2">
                     <div class="font-medium">{item.Name}</div>
