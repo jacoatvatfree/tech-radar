@@ -34,13 +34,11 @@ const RadarVisualization = ({
   }, []);
 
   useEffect(() => {
-    // Use a small delay to ensure DOM changes from theme toggle have been applied
-    const timeout = setTimeout(() => {
-      if (!data || data.length === 0) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+    if (!data || data.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
       
       const isDark = document.documentElement.classList.contains("dark");
       const isPrint = window.matchMedia('print').matches;
@@ -53,7 +51,7 @@ const RadarVisualization = ({
       const radius = Math.min(width, height) / 2 - 20;
       
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = effectiveIsDark ? "#3c2f2f" : "white";
+      ctx.fillStyle = effectiveIsDark ? "#1a1b26" : "white";
       ctx.fillRect(0, 0, width, height);
       
       // Draw rings and their labels
@@ -77,10 +75,10 @@ const RadarVisualization = ({
       
       // Define quadrant colors and draw filled quadrants
       const quadrantColors = {
-        Save: "rgba(255, 255, 200, 0.2)",
-        Scale: "rgba(255, 200, 200, 0.2)",
-        Secure: "rgba(200, 255, 200, 0.2)",
-        Maintain: "rgba(200, 200, 255, 0.2)",
+        Save: "rgba(224, 175, 104, 0.2)",
+        Scale: "rgba(247, 118, 142, 0.2)",
+        Secure: "rgba(158, 206, 106, 0.2)",
+        Maintain: "rgba(122, 162, 247, 0.2)",
       };
       
       Object.entries(quadrantColors).forEach(([quadrant, color], index) => {
@@ -108,7 +106,7 @@ const RadarVisualization = ({
         // Add quadrant labels with updated style: twice as large, bold, 50% transparent outline, fill same as background
         const padding = 20;
         const quadrantLabelColor = effectiveIsDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
-        const bgColor = effectiveIsDark ? "#3c2f2f" : "white";
+        const bgColor = effectiveIsDark ? "#1a1b26" : "white";
         const labelPositions = [
           { x: padding, y: padding, align: "left", baseline: "top" },
           { x: width - padding, y: padding, align: "right", baseline: "top" },
@@ -181,10 +179,10 @@ const RadarVisualization = ({
         dotsRef.current.push({ x, y, radius: 5, item });
       
         const dotColors = {
-          save: "#32CD32",
-          scale: "#1E90FF",
-          secure: "#FF4500",
-          maintain: "#FFD700"
+          save: "#e0af68",
+          scale: "#f7768e",
+          secure: "#9ece6a",
+          maintain: "#7aa2f7"
         };
         const dotColor = dotColors[quadrantLower] || "blue";
         ctx.beginPath();
@@ -197,8 +195,6 @@ const RadarVisualization = ({
         ctx.font = "12px sans-serif";
         ctx.fillText(item.Name, x + 10, y + 5);
       });
-    }, 50);
-    return () => clearTimeout(timeout);
   }, [data, width, height, theme, isPrinting]);
   
   return null;

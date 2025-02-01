@@ -15,8 +15,10 @@ const Radar = ({ data }) => {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
     setMousePos({ x, y });
 
     // Check if mouse is over any dot
@@ -61,9 +63,9 @@ const Radar = ({ data }) => {
 
   return (
     <div class="flex flex-col items-center">
-      <div class="relative w-[800px]">
+      <div class="relative w-full" style="max-width: calc(100% - 10%); aspect-ratio: 4/3;">
         <canvas
-          class="bg-white dark:bg-background"
+          class="bg-white dark:bg-background w-full h-full"
           ref={canvasRef}
           width={800}
           height={600}

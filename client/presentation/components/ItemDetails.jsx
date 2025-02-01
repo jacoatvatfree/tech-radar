@@ -7,7 +7,7 @@ const ItemDetails = ({ item, mousePos }) => {
 <div
   class="absolute bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 dark:text-white"
   style={{
-    left: mousePos.x < 400 ? "420px" : "20px",
+        left: mousePos.x < 400 ? "calc(50% + 20px)" : "calc(50% - 380px)",
     top: "20px",
     width: "360px",
     maxHeight: "560px",
