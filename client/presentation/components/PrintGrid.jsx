@@ -26,7 +26,7 @@ const PrintGrid = ({ data }) => {
   });
 
   return (
-    <div class="hidden print:block mt-12">
+    <div class="hidden print:block mt-12 print-grid">
       <div class="grid grid-cols-4 gap-6 w-[800px]">
         {["Save", "Scale", "Secure", "Maintain"].map((quadrant) => (
           <div key={quadrant} class="break-inside-avoid">

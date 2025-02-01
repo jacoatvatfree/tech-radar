@@ -21,4 +21,14 @@ body {
     box-shadow: none !important;
     filter: none !important;
   }
+  .print\:block {
+    display: block !important;
+  }
+  .radar-container {
+    transform: scale(0.8);
+    transform-origin: top center;
+  }
+  .print-grid {
+    page-break-before: always;
+  }
 }

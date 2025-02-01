@@ -63,7 +63,7 @@ const Radar = ({ data }) => {
 
   return (
     <div class="flex flex-col items-center">
-      <div class="relative w-full" style="max-width: calc(100% - 10%); aspect-ratio: 4/3;">
+      <div class="relative w-full radar-container" style="max-width: calc(100% - 20%); aspect-ratio: 4/3;">
         <canvas
           class="bg-white dark:bg-background w-full h-full"
           ref={canvasRef}
