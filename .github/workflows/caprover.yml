@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - main
-
+  workflow_dispatch:
 jobs:
   caprover-deploy:
     runs-on: ubuntu-latest
